@@ -4,30 +4,13 @@
   <meta charset="UTF-8">
   <title>Visualizador de Checklist</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-    }
-    h2 {
-      margin-top: 20px;
-      color: #2c3e50;
-    }
-    ul {
-      list-style: none;
-      padding-left: 0;
-    }
-    li {
-      margin-bottom: 10px;
-    }
-    .test {
-      margin-left: 20px;
-      padding: 5px;
-      border-left: 3px solid #3498db;
-    }
-    .description {
-      font-size: 0.9em;
-      color: #555;
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h2 { margin-top: 20px; color: #2c3e50; }
+    ul { list-style: none; padding-left: 20px; }
+    li { margin-bottom: 10px; }
+    .test { padding: 5px; border-left: 3px solid #3498db; }
+    .description { font-size: 0.9em; color: #555; }
+    .resultados { margin-left: 20px; color: #16a085; }
   </style>
 </head>
 <body>
@@ -67,26 +50,52 @@
         h2.textContent = grupo.fullName || grupo.groupName;
         container.appendChild(h2);
 
-        const ul = document.createElement("ul");
+        const ulGrupo = document.createElement("ul");
+
         grupo.tests.forEach(teste => {
-          const li = document.createElement("li");
-          li.classList.add("test");
+          const liTeste = document.createElement("li");
+          liTeste.classList.add("test");
 
           const titulo = document.createElement("strong");
           titulo.textContent = teste.fullName || teste.name;
-          li.appendChild(titulo);
+          liTeste.appendChild(titulo);
 
           if (teste.description) {
             const desc = document.createElement("div");
             desc.classList.add("description");
             desc.textContent = teste.description;
-            li.appendChild(desc);
+            liTeste.appendChild(desc);
           }
 
-          ul.appendChild(li);
+          // Procurar resultados
+          const groupKey = `group_${grupo.groupID}`;
+          const testKey = `test_${teste.ID}`;
+          const resultados = data.formData?.testResult?.[groupKey]?.[testKey];
+
+          if (resultados) {
+            try {
+              const parsedResultados = JSON.parse(resultados);
+              if (Array.isArray(parsedResultados)) {
+                const ulResultados = document.createElement("ul");
+                ulResultados.classList.add("resultados");
+
+                parsedResultados.forEach(res => {
+                  const liRes = document.createElement("li");
+                  liRes.textContent = res.name || JSON.stringify(res);
+                  ulResultados.appendChild(liRes);
+                });
+
+                liTeste.appendChild(ulResultados);
+              }
+            } catch (err) {
+              console.warn("Erro ao interpretar resultados:", err);
+            }
+          }
+
+          ulGrupo.appendChild(liTeste);
         });
 
-        container.appendChild(ul);
+        container.appendChild(ulGrupo);
       });
     }
   </script>
