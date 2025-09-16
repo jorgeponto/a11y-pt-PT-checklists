@@ -67,48 +67,29 @@
             liTeste.appendChild(desc);
           }
 
-          // Procurar resultados
-          const groupKey = `group_${grupo.groupID}`;
-          const testKey = `test_${teste.ID}`;
-          const resultados = data.formData?.testResult?.[groupKey]?.[testKey];
+          // Procurar resultados dentro de formData
+          const resultsList = document.createElement("ul");
+          resultsList.classList.add("resultados");
 
-          if (resultados) {
-            try {
-              const parsedResultados = JSON.parse(resultados);
-              if (Array.isArray(parsedResultados)) {
-                const ulResultados = document.createElement("ul");
-                ulResultados.classList.add("resultados");
-
-                parsedResultados.forEach(res => {
-                  const liRes = document.createElement("li");
-                  // mostra tudo (objeto inteiro ou string)
-                  if (typeof res === "object") {
-                    liRes.textContent = JSON.stringify(res, null, 2);
-                  } else {
-                    liRes.textContent = res;
-                  }
-                  ulResultados.appendChild(liRes);
-                });
-
-                liTeste.appendChild(ulResultados);
-              } else {
-                // Caso seja string simples ou outro tipo
-                const ulResultados = document.createElement("ul");
-                ulResultados.classList.add("resultados");
-                const liRes = document.createElement("li");
-                liRes.textContent = resultados;
-                ulResultados.appendChild(liRes);
-                liTeste.appendChild(ulResultados);
-              }
-            } catch (err) {
-              console.warn("Erro ao interpretar resultados:", err);
-              const ulResultados = document.createElement("ul");
-              ulResultados.classList.add("resultados");
+          // percorre todas as chaves de formData
+          for (const [key, value] of Object.entries(data.formData)) {
+            // verifica se a chave corresponde a este grupo/teste
+            if (key.includes(`group_${grupo.groupID}`) && key.includes(`test_${teste.ID}`)) {
               const liRes = document.createElement("li");
-              liRes.textContent = resultados;
-              ulResultados.appendChild(liRes);
-              liTeste.appendChild(ulResultados);
+
+              try {
+                const parsed = JSON.parse(value);
+                liRes.textContent = JSON.stringify(parsed, null, 2);
+              } catch {
+                liRes.textContent = value; // string simples (ex: "P")
+              }
+
+              resultsList.appendChild(liRes);
             }
+          }
+
+          if (resultsList.childElementCount > 0) {
+            liTeste.appendChild(resultsList);
           }
 
           ulGrupo.appendChild(liTeste);
