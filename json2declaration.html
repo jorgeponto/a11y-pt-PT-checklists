@@ -77,37 +77,45 @@
           for (const [key, value] of Object.entries(data.formData)) {
             if (key.includes(`group_${grupo.groupID}`) && key.includes(`test_${teste.ID}`)) {
               temResultados = true;
-              const liRes = document.createElement("li");
 
               try {
                 const parsed = JSON.parse(value);
 
                 if (Array.isArray(parsed)) {
                   parsed.forEach(item => {
+                    const liRes = document.createElement("li");
+
                     if (item.data && item.data.startsWith("data:image")) {
                       // renderizar imagem
+                      liRes.textContent = item.name ? item.name + ":" : "Imagem:";
                       const img = document.createElement("img");
                       img.src = item.data;
                       img.alt = item.name || "imagem";
                       img.classList.add("imagem");
-
-                      liRes.textContent = item.name ? item.name + ":" : "Imagem:";
                       liRes.appendChild(document.createElement("br"));
                       liRes.appendChild(img);
-                    } else {
+                    } else if (typeof item === "object") {
                       const pre = document.createElement("pre");
                       pre.textContent = JSON.stringify(item, null, 2);
                       liRes.appendChild(pre);
+                    } else if (item) {
+                      liRes.textContent = item;
+                    }
+
+                    if (liRes.hasChildNodes() || liRes.textContent.trim() !== "") {
+                      resultsList.appendChild(liRes);
                     }
                   });
                 } else {
+                  const liRes = document.createElement("li");
                   liRes.textContent = JSON.stringify(parsed, null, 2);
+                  resultsList.appendChild(liRes);
                 }
               } catch {
+                const liRes = document.createElement("li");
                 liRes.textContent = value;
+                resultsList.appendChild(liRes);
               }
-
-              resultsList.appendChild(liRes);
             }
           }
 
