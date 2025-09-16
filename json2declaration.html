@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Ler JSON Local</title>
+</head>
+<body>
+  <h1>Carregar ficheiro JSON</h1>
+
+  <input type="file" id="fileInput" accept=".json">
+  <pre id="saida"></pre>
+
+  <script>
+    document.getElementById('fileInput').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const json = JSON.parse(e.target.result);
+          // Exemplo: mostrar o campo "site-designation"
+          document.getElementById('saida').textContent = json.formData["site-designation"];
+        } catch (err) {
+          alert("Erro a ler o JSON: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+  </script>
+</body>
+</html>
