@@ -105,6 +105,7 @@
                   liRes.textContent = JSON.stringify(parsed, null, 2);
                 }
               } catch {
+                liRes.appendChild(resultsStrong); // Lista de evidências: em bold
                 liRes.textContent = value;
               }
 
