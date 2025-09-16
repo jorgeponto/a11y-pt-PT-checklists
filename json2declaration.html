@@ -85,11 +85,11 @@
                       // renderizar imagem
                       const img = document.createElement("img");
                       img.src = item.data;
-                      img.alt = item.name || "imagem";
+                      img.alt = item.name || "";
                       img.classList.add("imagem");
 
-                      liRes.textContent = item.name ? item.name + ":" : "Imagem:";
-                      liRes.appendChild(document.createElement("br"));
+                      /* liRes.textContent = item.name ? item.name + ":" : "Imagem:";
+                      liRes.appendChild(document.createElement("br")); */
                       liRes.appendChild(img);
                     } else {
                       // mostrar como JSON formatado
