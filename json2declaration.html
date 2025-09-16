@@ -104,11 +104,10 @@
                 } else {
                   liRes.textContent = JSON.stringify(parsed, null, 2);
                 }
-              } catch {
-                liRes.appendChild(resultsStrong); // Lista de evidências: em bold
+              } catch {                
                 liRes.textContent = value;
               }
-
+              
               resultsList.appendChild(liRes);
             }
           }
