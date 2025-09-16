@@ -71,8 +71,8 @@
           // Procurar resultados dentro de formData
           const resultsList = document.createElement("ul");
           resultsList.classList.add("resultados");
-          resultsStrong = document.createElement("strong");
-          resultsStrong.textContent = "Lista de evidências do requisito:";
+          // resultsStrong = document.createElement("strong");
+          // resultsStrong.textContent = "Lista de evidências do requisito:";
 
           for (const [key, value] of Object.entries(data.formData)) {
             if (key.includes(`group_${grupo.groupID}`) && key.includes(`test_${teste.ID}`)) {
