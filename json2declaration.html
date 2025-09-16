@@ -2,13 +2,39 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <title>Ler JSON Local</title>
+  <title>Visualizador de Checklist</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h2 {
+      margin-top: 20px;
+      color: #2c3e50;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    li {
+      margin-bottom: 10px;
+    }
+    .test {
+      margin-left: 20px;
+      padding: 5px;
+      border-left: 3px solid #3498db;
+    }
+    .description {
+      font-size: 0.9em;
+      color: #555;
+    }
+  </style>
 </head>
 <body>
-  <h1>Carregar ficheiro JSON</h1>
+  <h1>Carregar Checklist JSON</h1>
 
   <input type="file" id="fileInput" accept=".json">
-  <pre id="saida"></pre>
+  <div id="conteudo"></div>
 
   <script>
     document.getElementById('fileInput').addEventListener('change', function(event) {
@@ -19,14 +45,50 @@
       reader.onload = function(e) {
         try {
           const json = JSON.parse(e.target.result);
-          // Exemplo: mostrar o campo "site-designation"
-          document.getElementById('saida').textContent = json.formData["site-designation"];
+          mostrarChecklist(json);
         } catch (err) {
           alert("Erro a ler o JSON: " + err.message);
         }
       };
       reader.readAsText(file);
     });
+
+    function mostrarChecklist(data) {
+      const container = document.getElementById("conteudo");
+      container.innerHTML = "";
+
+      if (!data.tests || !data.tests["1.0"]) {
+        container.innerHTML = "<p>Formato de JSON inesperado.</p>";
+        return;
+      }
+
+      data.tests["1.0"].forEach(grupo => {
+        const h2 = document.createElement("h2");
+        h2.textContent = grupo.fullName || grupo.groupName;
+        container.appendChild(h2);
+
+        const ul = document.createElement("ul");
+        grupo.tests.forEach(teste => {
+          const li = document.createElement("li");
+          li.classList.add("test");
+
+          const titulo = document.createElement("strong");
+          titulo.textContent = teste.fullName || teste.name;
+          li.appendChild(titulo);
+
+          if (teste.description) {
+            const desc = document.createElement("div");
+            desc.classList.add("description");
+            desc.textContent = teste.description;
+            li.appendChild(desc);
+          }
+
+          ul.appendChild(li);
+        });
+
+        container.appendChild(ul);
+      });
+    }
   </script>
 </body>
 </html>
