@@ -10,7 +10,8 @@
     li { margin-bottom: 10px; }
     .test { padding: 5px; border-left: 3px solid #3498db; }
     .description { font-size: 0.9em; color: #555; }
-    .resultados { margin-left: 20px; color: #16a085; font-family: monospace; white-space: pre-wrap; }
+    .resultados { margin-left: 20px; font-family: monospace; white-space: pre-wrap; }
+    .imagem { margin-top: 5px; display: block; max-width: 400px; border: 1px solid #ccc; }
   </style>
 </head>
 <body>
@@ -71,17 +72,37 @@
           const resultsList = document.createElement("ul");
           resultsList.classList.add("resultados");
 
-          // percorre todas as chaves de formData
           for (const [key, value] of Object.entries(data.formData)) {
-            // verifica se a chave corresponde a este grupo/teste
             if (key.includes(`group_${grupo.groupID}`) && key.includes(`test_${teste.ID}`)) {
               const liRes = document.createElement("li");
 
               try {
                 const parsed = JSON.parse(value);
-                liRes.textContent = JSON.stringify(parsed, null, 2);
+
+                if (Array.isArray(parsed)) {
+                  parsed.forEach(item => {
+                    if (item.data && item.data.startsWith("data:image")) {
+                      // renderizar imagem
+                      const img = document.createElement("img");
+                      img.src = item.data;
+                      img.alt = item.name || "imagem";
+                      img.classList.add("imagem");
+
+                      liRes.textContent = item.name ? item.name + ":" : "Imagem:";
+                      liRes.appendChild(document.createElement("br"));
+                      liRes.appendChild(img);
+                    } else {
+                      // mostrar como JSON formatado
+                      const pre = document.createElement("pre");
+                      pre.textContent = JSON.stringify(item, null, 2);
+                      liRes.appendChild(pre);
+                    }
+                  });
+                } else {
+                  liRes.textContent = JSON.stringify(parsed, null, 2);
+                }
               } catch {
-                liRes.textContent = value; // string simples (ex: "P")
+                liRes.textContent = value;
               }
 
               resultsList.appendChild(liRes);
