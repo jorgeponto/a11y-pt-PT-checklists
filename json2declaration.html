@@ -71,8 +71,6 @@
           // Procurar resultados dentro de formData
           const resultsList = document.createElement("ul");
           resultsList.classList.add("resultados");
-          // resultsStrong = document.createElement("strong");
-          // resultsStrong.textContent = "Lista de evidências do requisito:";
 
           for (const [key, value] of Object.entries(data.formData)) {
             if (key.includes(`group_${grupo.groupID}`) && key.includes(`test_${teste.ID}`)) {
@@ -87,12 +85,11 @@
                       // renderizar imagem
                       const img = document.createElement("img");
                       img.src = item.data;
-                      img.alt = item.name || "";
+                      img.alt = item.name || "imagem";
                       img.classList.add("imagem");
 
-                      /* liRes.textContent = item.name ? item.name + ":" : "Imagem:";
-                      liRes.appendChild(document.createElement("br")); */
-                      liRes.appendChild(resultsStrong);
+                      liRes.textContent = item.name ? item.name + ":" : "Imagem:";
+                      liRes.appendChild(document.createElement("br"));
                       liRes.appendChild(img);
                     } else {
                       // mostrar como JSON formatado
@@ -104,10 +101,10 @@
                 } else {
                   liRes.textContent = JSON.stringify(parsed, null, 2);
                 }
-              } catch {                
+              } catch {
                 liRes.textContent = value;
               }
-              
+
               resultsList.appendChild(liRes);
             }
           }
