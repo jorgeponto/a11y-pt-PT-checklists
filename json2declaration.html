@@ -9,7 +9,8 @@
     ul { list-style: none; padding-left: 20px; }
     li { margin-bottom: 10px; }
     .test { padding: 5px; border-left: 3px solid #3498db; }
-    .description { font-size: 0.9em; color: #555; }
+    .description { font-size: 0.9em; color: #555; margin-bottom: 8px; }
+    .evidencias { font-weight: bold; margin-left: 5px; display: block; margin-top: 5px; }
     .resultados { margin-left: 20px; font-family: monospace; white-space: pre-wrap; }
     .imagem { margin-top: 5px; display: block; max-width: 400px; border: 1px solid #ccc; }
   </style>
@@ -71,9 +72,11 @@
           // Procurar resultados dentro de formData
           const resultsList = document.createElement("ul");
           resultsList.classList.add("resultados");
+          let temResultados = false;
 
           for (const [key, value] of Object.entries(data.formData)) {
             if (key.includes(`group_${grupo.groupID}`) && key.includes(`test_${teste.ID}`)) {
+              temResultados = true;
               const liRes = document.createElement("li");
 
               try {
@@ -92,7 +95,6 @@
                       liRes.appendChild(document.createElement("br"));
                       liRes.appendChild(img);
                     } else {
-                      // mostrar como JSON formatado
                       const pre = document.createElement("pre");
                       pre.textContent = JSON.stringify(item, null, 2);
                       liRes.appendChild(pre);
@@ -109,7 +111,11 @@
             }
           }
 
-          if (resultsList.childElementCount > 0) {
+          if (temResultados) {
+            const evidencias = document.createElement("strong");
+            evidencias.classList.add("evidencias");
+            evidencias.textContent = "Lista de evidências recolhidas para o requisito:";
+            liTeste.appendChild(evidencias);
             liTeste.appendChild(resultsList);
           }
 
