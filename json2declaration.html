@@ -10,7 +10,7 @@
     li { margin-bottom: 10px; }
     .test { padding: 5px; border-left: 3px solid #3498db; }
     .description { font-size: 0.9em; color: #555; }
-    .resultados { margin-left: 20px; color: #16a085; }
+    .resultados { margin-left: 20px; color: #16a085; font-family: monospace; white-space: pre-wrap; }
   </style>
 </head>
 <body>
@@ -81,14 +81,33 @@
 
                 parsedResultados.forEach(res => {
                   const liRes = document.createElement("li");
-                  liRes.textContent = res.name || JSON.stringify(res);
+                  // mostra tudo (objeto inteiro ou string)
+                  if (typeof res === "object") {
+                    liRes.textContent = JSON.stringify(res, null, 2);
+                  } else {
+                    liRes.textContent = res;
+                  }
                   ulResultados.appendChild(liRes);
                 });
 
                 liTeste.appendChild(ulResultados);
+              } else {
+                // Caso seja string simples ou outro tipo
+                const ulResultados = document.createElement("ul");
+                ulResultados.classList.add("resultados");
+                const liRes = document.createElement("li");
+                liRes.textContent = resultados;
+                ulResultados.appendChild(liRes);
+                liTeste.appendChild(ulResultados);
               }
             } catch (err) {
               console.warn("Erro ao interpretar resultados:", err);
+              const ulResultados = document.createElement("ul");
+              ulResultados.classList.add("resultados");
+              const liRes = document.createElement("li");
+              liRes.textContent = resultados;
+              ulResultados.appendChild(liRes);
+              liTeste.appendChild(ulResultados);
             }
           }
 
