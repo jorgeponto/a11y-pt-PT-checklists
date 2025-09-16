@@ -69,7 +69,7 @@
             liTeste.appendChild(desc);
           }
 
-          // Procurar resultados dentro de formData
+          // lista de resultados para este teste
           const resultsList = document.createElement("ul");
           resultsList.classList.add("resultados");
           let temResultados = false;
@@ -83,10 +83,9 @@
 
                 if (Array.isArray(parsed)) {
                   parsed.forEach(item => {
-                    const liRes = document.createElement("li");
-
+                    // só cria <li> se houver conteúdo
                     if (item.data && item.data.startsWith("data:image")) {
-                      // renderizar imagem
+                      const liRes = document.createElement("li");
                       liRes.textContent = item.name ? item.name + ":" : "Imagem:";
                       const img = document.createElement("img");
                       img.src = item.data;
@@ -94,32 +93,38 @@
                       img.classList.add("imagem");
                       liRes.appendChild(document.createElement("br"));
                       liRes.appendChild(img);
-                    } else if (typeof item === "object") {
+                      resultsList.appendChild(liRes);
+                    } else if (typeof item === "object" && Object.keys(item).length > 0) {
+                      const liRes = document.createElement("li");
                       const pre = document.createElement("pre");
                       pre.textContent = JSON.stringify(item, null, 2);
                       liRes.appendChild(pre);
-                    } else if (item) {
+                      resultsList.appendChild(liRes);
+                    } else if (item && String(item).trim() !== "") {
+                      const liRes = document.createElement("li");
                       liRes.textContent = item;
-                    }
-
-                    if (liRes.hasChildNodes() || liRes.textContent.trim() !== "") {
                       resultsList.appendChild(liRes);
                     }
                   });
                 } else {
-                  const liRes = document.createElement("li");
-                  liRes.textContent = JSON.stringify(parsed, null, 2);
-                  resultsList.appendChild(liRes);
+                  const texto = JSON.stringify(parsed, null, 2);
+                  if (texto && texto !== "{}" && texto !== "[]") {
+                    const liRes = document.createElement("li");
+                    liRes.textContent = texto;
+                    resultsList.appendChild(liRes);
+                  }
                 }
               } catch {
-                const liRes = document.createElement("li");
-                liRes.textContent = value;
-                resultsList.appendChild(liRes);
+                if (value && String(value).trim() !== "") {
+                  const liRes = document.createElement("li");
+                  liRes.textContent = value;
+                  resultsList.appendChild(liRes);
+                }
               }
             }
           }
 
-          if (temResultados) {
+          if (temResultados && resultsList.childElementCount > 0) {
             const evidencias = document.createElement("strong");
             evidencias.classList.add("evidencias");
             evidencias.textContent = "Lista de evidências recolhidas para o requisito:";
