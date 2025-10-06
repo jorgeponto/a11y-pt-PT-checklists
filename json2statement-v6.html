@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Conversor de Checklists JSON2Statement</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.min.css" rel="stylesheet">    
+
+  <style>    
+    body { margin: auto auto; }
+    h2 { margin-top: 20px; color: #2c3e50; }
+    ul { list-style: none; padding-left: 20px; }
+    li { margin-bottom: 10px; }
+    .test { padding: 5px; border-left: 3px solid #3498db; }
+    .description { font-size: 0.9em; color: #555; margin-bottom: 8px; }
+    .evidencias { font-weight: bold; margin-left: 5px; display: inline-block; margin-top: 5px; }
+    .resultados { margin-left: 20px; font-family: monospace; white-space: pre-wrap; }
+    .imagem { margin-top: 5px; display: block; max-width: 400px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+<h1 id="pageTitle">Carregar Checklist JSON</h1>
+<input type="file" id="fileInput" accept=".json">
+<div id="buttonsContainer"></div>
+<div id="conteudo"></div>
+
+<script>
+const titleMap = {
+  "Menu de navegação": "Compilação de evidências da Checklist 10 Aspetos Críticos de Acessibilidade Funcional",
+  "Clareza do conteúdo": "Compilação de evidências da Checklist Conteúdo",
+  "Formulários": "Compilação de evidências da Checklist Transação",
+  "Checklist": "Compilação de evidências da Checklist"
+};
+
+function gerarNomeFicheiro(title) {
+  return title
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "_")
+    .replace(/[^\w\-]/g, "")
+    + ".html";
+}
+
+function downloadHTML(pageTitle, comCSS) {
+  const conteudoDiv = document.getElementById("conteudo");
+  if (!conteudoDiv) return;
+
+  const css = comCSS ? `
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.min.css" rel="stylesheet">    
+    <style>    
+      body { margin: auto auto; }
+      h2 { margin-top: 20px; color: #2c3e50; }
+      ul { list-style: none; padding-left: 20px; }
+      li { margin-bottom: 10px; }
+      .test { padding: 5px; border-left: 3px solid #3498db; }
+      .description { font-size: 0.9em; color: #555; margin-bottom: 8px; }
+      .evidencias { font-weight: bold; margin-left: 5px; display: inline-block; margin-top: 5px; }
+      .resultados { margin-left: 20px; font-family: monospace; white-space: pre-wrap; }
+      .imagem { margin-top: 5px; display: block; max-width: 400px; border: 1px solid #ccc; }
+    </style>
+  ` : "";
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="pt-PT">
+    <head>
+      <meta charset="UTF-8">
+      <title>${pageTitle}</title>
+      ${css}
+    </head>
+    <body>
+      <h1>${pageTitle}</h1>
+      ${conteudoDiv.innerHTML}
+    </body>
+    </html>
+  `;
+
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = gerarNomeFicheiro(pageTitle);
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 500);
+}
+
+document.getElementById('fileInput').addEventListener('change', function(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const json = JSON.parse(e.target.result);
+
+      const groupName = json.tests?.["1.0"]?.[0]?.groupName || "Checklist";
+      const pageTitle = titleMap[groupName] || `Compilação de evidências da Checklist ${groupName}`;
+
+      document.getElementById("pageTitle").textContent = pageTitle;
+      document.title = pageTitle;
+      document.getElementById("fileInput").style.display = "none";
+
+      const container = document.getElementById("buttonsContainer");
+      container.innerHTML = "";
+
+      const btnSemCSS = document.createElement("button");
+      btnSemCSS.textContent = "Descarregar HTML sem CSS";
+      btnSemCSS.onclick = () => downloadHTML(pageTitle, false);
+
+      const btnComCSS = document.createElement("button");
+      btnComCSS.textContent = "Descarregar HTML com CSS";
+      btnComCSS.onclick = () => downloadHTML(pageTitle, true);
+
+      container.appendChild(btnSemCSS);
+      container.appendChild(btnComCSS);
+
+      mostrarSintese(json);
+      mostrarChecklist(json);
+    } catch (err) {
+      alert("Erro a ler o JSON: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+});
+
+function mostrarSintese(data) {
+  const container = document.getElementById("conteudo");
+  if (!data.tests || !data.tests["1.0"] || !data.formData) return;
+
+  const div = document.createElement("div");
+  const h2 = document.createElement("h2");
+  h2.textContent = "Sumário";
+  div.appendChild(h2);
+
+  const table = document.createElement("table");
+  table.className = "table table-striped table-bordered";
+
+  const caption = document.createElement("caption");
+  caption.textContent = "Síntese de resultados por requisito";
+  caption.style.captionSide = "top";
+  caption.style.fontWeight = "bold";
+  caption.style.marginBottom = "0.5em";
+  table.appendChild(caption);
+
+  const thead = document.createElement("thead");
+  const trHead = document.createElement("tr");
+  ["ID","Requisito","Sim","Não","N/A"].forEach((txt) => {
+    const th = document.createElement("th");
+    th.textContent = txt;
+    if (txt === "Requisito") th.style.width = "70%";
+    trHead.appendChild(th);
+  });
+  thead.appendChild(trHead);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  const testsGroups = data.tests["1.0"];
+
+  testsGroups.forEach(grupo => {
+    grupo.tests.forEach(teste => {
+      const testKey = `testResult['group_${grupo.groupID}']['test_${teste.ID}']`;
+      const resultado = data.formData[testKey];
+
+      let bolaSim = '', bolaNao = '', bolaNA = '';
+      if (resultado === 'P') bolaSim = '🟢';
+      else if (resultado === 'N') bolaNao = '🔴';
+      else if (resultado === 'NA') bolaNA = '<span style="display:inline-block; width:1em; height:1em; border:2px solid black; border-radius:50%; background:white;"></span>';
+      else bolaSim = bolaNao = bolaNA = '<abbr title="requisito não foi avaliado">-</abbr>';
+
+      const tr = document.createElement("tr");
+
+      const tdID = document.createElement("td");
+      const a = document.createElement("a");
+      a.href = `#n${teste.testID.replace('.', '-')}`;
+      a.textContent = teste.testID;
+      tdID.appendChild(a);
+      tr.appendChild(tdID);
+
+      const tdReq = document.createElement("td");
+      tdReq.textContent = teste.name;
+      tdReq.style.textAlign = "left";
+      tr.appendChild(tdReq);
+
+      const tdSim = document.createElement("td");
+      tdSim.innerHTML = bolaSim;
+      tr.appendChild(tdSim);
+
+      const tdNao = document.createElement("td");
+      tdNao.innerHTML = bolaNao;
+      tr.appendChild(tdNao);
+
+      const tdNA = document.createElement("td");
+      tdNA.innerHTML = bolaNA;
+      tr.appendChild(tdNA);
+
+      tbody.appendChild(tr);
+    });
+  });
+
+  table.appendChild(tbody);
+  div.appendChild(table);
+  container.appendChild(div);
+}
+
+function mostrarChecklist(data) {
+  const container = document.getElementById("conteudo");
+
+  data.tests["1.0"].forEach(grupo => {
+    const h2 = document.createElement("h2");
+    h2.textContent = grupo.fullName || grupo.groupName;
+    container.appendChild(h2);
+
+    const ulGrupo = document.createElement("ul");
+
+    grupo.tests.forEach(teste => {
+      const liTeste = document.createElement("li");
+      liTeste.classList.add("test");
+
+      const titulo = document.createElement("strong");
+      const safeID = `n${teste.testID.replace(/\./g, '-')}`;
+      titulo.id = safeID;
+      const rawTitle = (teste.fullName || teste.name || "").toString().trim();
+      let displayTitle = rawTitle;
+      if (rawTitle && !rawTitle.startsWith(teste.testID)) {
+        displayTitle = `${teste.testID} - ${rawTitle}`;
+      }
+      if (!displayTitle) displayTitle = teste.testID;
+      titulo.textContent = displayTitle;
+      liTeste.appendChild(titulo);
+
+      if (teste.description) {
+        const desc = document.createElement("div");
+        desc.classList.add("description");
+        desc.textContent = teste.description;
+        liTeste.appendChild(desc);
+      }
+
+      const testKey = `testResult['group_${grupo.groupID}']['test_${teste.ID}']`;
+      const resultado = data.formData[testKey];
+
+      // Criar badge
+      const badgeWrapper = document.createElement("p");
+      const badge = document.createElement("span");
+      badge.classList.add("badge");
+      badge.style.marginRight = "8px";
+
+      if (resultado === "P") { badge.classList.add("bg-success"); badge.textContent = "Cumpre"; }
+      else if (resultado === "N") { badge.classList.add("bg-danger"); badge.textContent = "Não cumpre"; }
+      else if (resultado === "NA") { badge.classList.add("bg-warning", "text-dark"); badge.textContent = "Não aplicável"; }
+      else { badge.classList.add("bg-secondary"); badge.textContent = "Não avaliado"; }
+
+      badgeWrapper.appendChild(badge);
+
+      // Lista de evidências
+      const resultsList = document.createElement("ul");
+      resultsList.classList.add("resultados");
+      let temResultados = false;
+
+      for (const [key, value] of Object.entries(data.formData)) {
+        if (key.includes(`group_${grupo.groupID}`) && key.includes(`test_${teste.ID}`)) {
+          temResultados = true;
+          try {
+            const parsed = JSON.parse(value);
+            if (Array.isArray(parsed)) {
+              parsed.forEach(item => {
+                // ignorar os valores "P", "N", "NA" que já estão no badge
+                if (item === "P" || item === "N" || item === "NA") return;
+                if (item.data && item.data.startsWith("data:image")) {
+                  const liRes = document.createElement("li");
+                  liRes.textContent = item.name ? item.name + ":" : "Imagem:";
+                  const img = document.createElement("img");
+                  img.src = item.data;
+                  img.alt = item.name || "imagem";
+                  img.classList.add("imagem");
+                  liRes.appendChild(document.createElement("br"));
+                  liRes.appendChild(img);
+                  resultsList.appendChild(liRes);
+                } else if (typeof item === "object" && Object.keys(item).length > 0) {
+                  const liRes = document.createElement("li");
+                  const pre = document.createElement("pre");
+                  pre.textContent = JSON.stringify(item, null, 2);
+                  liRes.appendChild(pre);
+                  resultsList.appendChild(liRes);
+                } else if (item && String(item).trim() !== "") {
+                  const liRes = document.createElement("li");
+                  liRes.textContent = item;
+                  resultsList.appendChild(liRes);
+                }
+              });
+            } else {
+              const texto = JSON.stringify(parsed, null, 2);
+              if (texto && texto !== "{}" && texto !== "[]") {
+                const liRes = document.createElement("li");
+                liRes.textContent = texto;
+                resultsList.appendChild(liRes);
+              }
+            }
+          } catch {
+            if (value && !["P","N","NA"].includes(value) && String(value).trim() !== "") {
+              const liRes = document.createElement("li");
+              liRes.textContent = value;
+              resultsList.appendChild(liRes);
+            }
+          }
+        }
+      }
+
+      const evidenciasWrapper = document.createElement("div");
+      evidenciasWrapper.appendChild(badgeWrapper);
+
+      const evidencias = document.createElement("strong");
+      evidencias.classList.add("evidencias");
+      evidencias.textContent = "Lista de evidências recolhidas para o requisito:";
+      evidenciasWrapper.appendChild(evidencias);
+
+      liTeste.appendChild(evidenciasWrapper);
+
+      if (temResultados && resultsList.childElementCount > 0) {
+        liTeste.appendChild(resultsList);
+      }
+
+      ulGrupo.appendChild(liTeste);
+    });
+
+    container.appendChild(ulGrupo);
+  });
+}
+</script>
+
+</body>
+</html>
